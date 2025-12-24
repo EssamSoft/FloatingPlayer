@@ -2,6 +2,9 @@
 
 A customizable, floating audio player for SwiftUI applications. FloatingPlayer provides an elegant and intuitive way to add audio playback capabilities to your app with a floating interface that can be minimized or expanded based on user interaction.
 
+![App Screenshot](./screenshot.gif)
+
+
 ## Features
 
 - 🎵 **Floating Interface**: Draggable floating player that snaps to corners
