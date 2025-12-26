@@ -6,30 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		52BDD2172EFC9BCB007428E5 /* FloatingPlayerPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 52BDD2162EFC9BCB007428E5 /* FloatingPlayerPackage */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		5270D4E82EF7522900128A51 /* FloatingPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FloatingPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		52BDD2142EFC9B33007428E5 /* Exceptions for "FloatingPlayer" folder in "FloatingPlayer" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				FloatingPlayerPackage,
-			);
-			target = 5270D4E72EF7522900128A51 /* FloatingPlayer */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		5270D4EA2EF7522900128A51 /* FloatingPlayer */ = {
+		52BDDA442EFEEE1B007428E5 /* FloatingPlayer */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				52BDD2142EFC9B33007428E5 /* Exceptions for "FloatingPlayer" folder in "FloatingPlayer" target */,
-			);
 			path = FloatingPlayer;
 			sourceTree = "<group>";
 		};
@@ -40,7 +23,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				52BDD2172EFC9BCB007428E5 /* FloatingPlayerPackage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,8 +32,7 @@
 		5270D4DF2EF7522900128A51 = {
 			isa = PBXGroup;
 			children = (
-				5270D4EA2EF7522900128A51 /* FloatingPlayer */,
-				52BDD2152EFC9BCB007428E5 /* Frameworks */,
+				52BDDA442EFEEE1B007428E5 /* FloatingPlayer */,
 				5270D4E92EF7522900128A51 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -62,13 +43,6 @@
 				5270D4E82EF7522900128A51 /* FloatingPlayer.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		52BDD2152EFC9BCB007428E5 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -87,11 +61,10 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				5270D4EA2EF7522900128A51 /* FloatingPlayer */,
+				52BDDA442EFEEE1B007428E5 /* FloatingPlayer */,
 			);
 			name = FloatingPlayer;
 			packageProductDependencies = (
-				52BDD2162EFC9BCB007428E5 /* FloatingPlayerPackage */,
 			);
 			productName = FloatingPlayer;
 			productReference = 5270D4E82EF7522900128A51 /* FloatingPlayer.app */;
@@ -359,13 +332,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		52BDD2162EFC9BCB007428E5 /* FloatingPlayerPackage */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = FloatingPlayerPackage;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5270D4E02EF7522900128A51 /* Project object */;
 }
