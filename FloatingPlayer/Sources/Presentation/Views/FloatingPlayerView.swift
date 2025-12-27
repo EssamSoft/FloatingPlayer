@@ -11,9 +11,9 @@ struct FloatingPlayerView<Item: MediaItem>: View {
     let playerVM: PlayerViewModel<Item>
     let floatingVM: FloatingPlayerViewModel
     let config: PlayerConfiguration
-
+    
     @Namespace private var playerNamespace
-
+    
     init(
         playerVM: PlayerViewModel<Item>,
         floatingVM: FloatingPlayerViewModel,
@@ -23,7 +23,7 @@ struct FloatingPlayerView<Item: MediaItem>: View {
         self.floatingVM = floatingVM
         self.config = config
     }
-
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -38,21 +38,21 @@ struct FloatingPlayerView<Item: MediaItem>: View {
                         geometry: geometry
                     )
                     .transition(.Blur)
-                  
-                    
                 }
             }
             .animation(
                 .spring(response: config.animation.springResponse, dampingFraction: config.animation.springDamping),
                 value: floatingVM.isExpanded
             )
-            
             .onAppear {
                 if floatingVM.position == .zero {
                     floatingVM.initializePosition(screenSize: geometry.size, safeArea: geometry.safeAreaInsets)
                 }
             }
-
+            // ✅ Use nearest corner snap for orientation changes
+            .onChange(of: geometry.size) { oldSize, newSize in
+                floatingVM.snapToCorner(screenSize: newSize, safeArea: geometry.safeAreaInsets)
+            }
         }
     }
 }
@@ -64,6 +64,6 @@ struct FloatingPlayerView<Item: MediaItem>: View {
         service: DefaultMediaPlayerService(initialItem: Song.sample)
     )
     @Previewable @State var floatingVM = FloatingPlayerViewModel(config: .default)
-
+    
     return FloatingPlayerView(playerVM: playerVM, floatingVM: floatingVM)
 }

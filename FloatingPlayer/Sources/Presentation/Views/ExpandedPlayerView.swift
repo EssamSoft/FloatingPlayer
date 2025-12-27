@@ -13,7 +13,6 @@ struct ExpandedPlayerView<Item: MediaItem>: View {
     let config: PlayerConfiguration
     
     @State private var dragOffset: CGFloat = 0
-    private let dragThreshold: CGFloat = 100
     
     var body: some View {
         VStack {
@@ -25,71 +24,96 @@ struct ExpandedPlayerView<Item: MediaItem>: View {
                     seekControls
                 }
                 .overlay(alignment: .top) {
-                    // Visual indicator that this component is swappable
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(.secondary)
-                        .opacity(0.6)
-                        .frame(width: 40, height: 4)
-                        .padding(.top, 8)
+                    dragIndicator
                 }
             }
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: config.ui.cornerRadius))
-            .shadow(radius: config.ui.shadowRadius, y: -2)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
-            .offset(y: max(0, dragOffset))
-            .opacity(1 - min(dragOffset / (dragThreshold * 1.0), 0.95))
-            .gesture(
-                DragGesture()
-                    .onChanged { gesture in
-                        if gesture.translation.height > 0 {
-                            dragOffset = gesture.translation.height
-                        }
-                    }
-                    .onEnded { gesture in
-                        if gesture.translation.height > dragThreshold {
-                            floatingVM.toggleExpanded()
-                        }
-                        dragOffset = 0
-                    }
-            )
-            
+            .shadow(radius: config.ui.shadowRadius, y: config.ui.expandedShadowOffsetY)
+            .padding(.horizontal, config.ui.expandedHorizontalPadding)
+            .padding(.bottom, config.ui.expandedBottomPadding)
+            .offset(y: dragOffset)
+            .opacity(1 - min(dragOffset / (config.gestures.dragThreshold * config.gestures.opacityFadeMultiplier), config.gestures.maxOpacityFade))
+            .gesture(dragGesture)
         }
-        
+    }
+    
+    // MARK: - Gestures
+    
+    private var dragGesture: some Gesture {
+        DragGesture()
+            .onChanged { gesture in
+                if gesture.translation.height > 0 {
+                    // Downward drag - normal behavior
+                    dragOffset = gesture.translation.height
+                } else {
+                    // Upward drag - limited resistance effect
+                    dragOffset = max(
+                        gesture.translation.height * config.gestures.upwardDragResistance,
+                        -config.gestures.maxUpwardDragOffset
+                    )
+                }
+            }
+            .onEnded { gesture in
+                if gesture.translation.height > config.gestures.dragThreshold {
+                    floatingVM.toggleExpanded()
+                }
+                withAnimation(
+                    .spring(
+                        response: config.animation.springResponse,
+                        dampingFraction: config.animation.springDamping
+                    )
+                ) {
+                    dragOffset = 0
+                }
+            }
     }
     
     // MARK: - Subviews
     
+    private var dragIndicator: some View {
+        RoundedRectangle(cornerRadius: config.ui.dragIndicatorCornerRadius)
+            .fill(.secondary)
+            .opacity(config.ui.dragIndicatorOpacity)
+            .frame(
+                width: config.ui.dragIndicatorWidth,
+                height: config.ui.dragIndicatorHeight
+            )
+            .padding(.top, config.ui.dragIndicatorTopPadding)
+    }
+    
     private var progressBar: some View {
         ProgressView(value: playerVM.progress)
             .progressViewStyle(.linear)
-            .scaleEffect(y: 0.5)
+            .scaleEffect(y: config.ui.progressBarScaleY)
             .frame(height: config.ui.progressBarHeight)
     }
     
     private var playerControls: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: config.ui.controlsSpacing) {
             albumArtwork
             songInfo
             Spacer()
             actionButtons
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, config.ui.controlsHorizontalPadding)
+        .padding(.vertical, config.ui.controlsVerticalPadding)
     }
     
     private var albumArtwork: some View {
         Image(systemName: playerVM.currentItem?.artwork ?? "music.note")
             .font(.title)
             .foregroundStyle(.primary)
-            .frame(width: 50, height: 50)
-            .background(.gray.opacity(0.2))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .frame(
+                width: config.ui.artworkSize,
+                height: config.ui.artworkSize
+            )
+            .background(.gray.opacity(config.ui.artworkBackgroundOpacity))
+            .clipShape(RoundedRectangle(cornerRadius: config.ui.artworkCornerRadius))
     }
     
     private var songInfo: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: config.ui.songInfoSpacing) {
             Text(playerVM.currentItem?.title ?? "No Media")
                 .font(.headline)
                 .lineLimit(1)
@@ -102,7 +126,7 @@ struct ExpandedPlayerView<Item: MediaItem>: View {
     }
     
     private var actionButtons: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: config.ui.actionButtonsSpacing) {
             favoriteButton
             playPauseButton
             dismissButton
@@ -136,7 +160,7 @@ struct ExpandedPlayerView<Item: MediaItem>: View {
     }
     
     private var seekControls: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: config.ui.seekControlsSpacing) {
             skipButton(icon: "minus", action: playerVM.skipBackward)
             
             Slider(
@@ -149,8 +173,8 @@ struct ExpandedPlayerView<Item: MediaItem>: View {
             
             skipButton(icon: "plus", action: playerVM.skipForward)
         }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        .padding(.horizontal, config.ui.seekControlsHorizontalPadding)
+        .padding(.bottom, config.ui.seekControlsBottomPadding)
     }
     
     private func skipButton(icon: String, action: @escaping () -> Void) -> some View {
@@ -158,13 +182,15 @@ struct ExpandedPlayerView<Item: MediaItem>: View {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundStyle(.primary)
-                .frame(width: 32, height: 32)
-                .background(.gray.opacity(0.2))
+                .frame(
+                    width: config.ui.skipButtonSize,
+                    height: config.ui.skipButtonSize
+                )
+                .background(.gray.opacity(config.ui.skipButtonBackgroundOpacity))
                 .clipShape(Circle())
         }
     }
 }
-
 
 #Preview {
     @Previewable @State var playerVM = PlayerViewModel(

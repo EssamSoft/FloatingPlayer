@@ -9,10 +9,14 @@ import SwiftUI
 
 struct ContentView: View {
     // MARK: - ViewModels
-    @State private var playerVM = PlayerViewModel(
-        service: DefaultMediaPlayerService(initialItem: Song.sample)
+    
+    let configuration: PlayerConfiguration = PlayerConfiguration(
+        gestures: .init(dragThreshold: 50)
     )
-    @State private var floatingVM = FloatingPlayerViewModel(config: .default)
+    
+    @State private var floatingVM = FloatingPlayerViewModel()
+    
+    @State private var playerVM = PlayerViewModel(service: DefaultMediaPlayerService(initialItem: Song.sample))
 
     // MARK: - Body
     var body: some View {
@@ -21,7 +25,9 @@ struct ContentView: View {
 
             FloatingPlayerView(
                 playerVM: playerVM,
-                floatingVM: floatingVM
+                floatingVM: floatingVM,
+                config: configuration
+                
             )
         }
     }
@@ -83,24 +89,7 @@ struct ContentView: View {
                 }
                 .buttonStyle(.bordered)
             }
-
-            HStack(spacing: 12) {
-                Button {
-                    playerVM.skipBackward()
-                } label: {
-                    Label("Skip -15s", systemImage: "gobackward.15")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-
-                Button {
-                    playerVM.skipForward()
-                } label: {
-                    Label("Skip +15s", systemImage: "goforward.15")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-            }
+ 
         }
         .padding()
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))

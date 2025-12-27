@@ -19,8 +19,8 @@ final class FloatingPlayerViewModel {
     private let config: PlayerConfiguration
 
     // MARK: - Initialization
-    init(config: PlayerConfiguration) {
-        self.config = config
+    init(config: PlayerConfiguration? = nil) {
+        self.config = config ?? .default
     }
 
     // MARK: - Position Management
@@ -32,10 +32,39 @@ final class FloatingPlayerViewModel {
         position = newPosition
     }
 
+    /// Snaps to nearest corner based on current position
     func snapToCorner(screenSize: CGSize, safeArea: EdgeInsets) {
-        let corners = calculateCorners(screenSize: screenSize, safeArea: safeArea)
-        position = corners.min { $0.distance(to: position) < $1.distance(to: position) } ?? position
+        let corner = GeometryHelper.detectCorner(
+            position: position,
+            screenSize: screenSize,
+            safeArea: safeArea,
+            config: config
+        )
+        
+        position = GeometryHelper.position(
+            for: corner,
+            screenSize: screenSize,
+            safeArea: safeArea,
+            config: config
+        )
     }
+    
+//    /// Snaps to corner based on drag direction (for drag gestures)
+//    func snapToCornerByDirection(screenSize: CGSize, safeArea: EdgeInsets) {
+//        let corner = GeometryHelper.detectCornerByDirection(
+//            position: position,
+//            screenSize: screenSize,
+//            safeArea: safeArea,
+//            config: config
+//        )
+//        
+//        position = GeometryHelper.position(
+//            for: corner,
+//            screenSize: screenSize,
+//            safeArea: safeArea,
+//            config: config
+//        )
+//    }
 
     // MARK: - UI Actions
     func toggleExpanded() {
@@ -49,18 +78,4 @@ final class FloatingPlayerViewModel {
             y: screenSize.height - config.fab.margin - config.fab.size / 2 - safeArea.bottom
         )
     }
-
-    private func calculateCorners(screenSize: CGSize, safeArea: EdgeInsets) -> [CGPoint] {
-        let halfSize = config.fab.size / 2
-        let margin = config.fab.margin
-
-        return [
-            CGPoint(x: margin + halfSize, y: margin + halfSize + safeArea.top),
-            CGPoint(x: screenSize.width - margin - halfSize, y: margin + halfSize + safeArea.top),
-            CGPoint(x: margin + halfSize, y: screenSize.height - margin - halfSize - safeArea.bottom),
-            CGPoint(x: screenSize.width - margin - halfSize, y: screenSize.height - margin - halfSize - safeArea.bottom)
-        ]
-    }
 }
-
- 

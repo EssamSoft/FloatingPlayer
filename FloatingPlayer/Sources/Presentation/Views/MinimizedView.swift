@@ -12,34 +12,42 @@ struct MinimizedView<Item: MediaItem>: View {
     let floatingVM: FloatingPlayerViewModel
     let config: PlayerConfiguration
     let geometry: GeometryProxy
-
+    
     @State private var dragOffset: CGSize = .zero
     @State private var isDragActive = false
     @State private var currentCorner: GeometryHelper.Corner = .bottomRight
-
+    
     private var maximizeOffset: CGPoint {
         let offset = 24 + config.fab.size / 2
         let xOffset = [.topRight, .bottomRight].contains(currentCorner) ? -offset : offset
         return CGPoint(x: xOffset, y: 0)
     }
-
+    
     var body: some View {
         ZStack {
             playPauseButton
             maximizeButton
                 .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.3), value: isDragActive)
-
+            
         }
         .offset(dragOffset)
         .position(floatingVM.position)
         .gesture(dragGesture)
         .onAppear { detectCorner() }
         .animation(.spring(response: 0.4, dampingFraction: 0.4), value: currentCorner)
-
+        // ⚠️ Re-detect corner when geometry changes
+        .onChange(of: geometry.size) { _, _ in
+            detectCorner()
+        }
+        // ⚠️ Re-detect corner when position updates
+        .onChange(of: floatingVM.position) { _, _ in
+            detectCorner()
+        }
+        
     }
-
+    
     // MARK: - Subviews
-
+    
     private var playPauseButton: some View {
         Image(systemName: playerVM.isPlaying ? "pause.fill" : "play.fill")
             .font(.title2)
@@ -51,7 +59,7 @@ struct MinimizedView<Item: MediaItem>: View {
             .scaleEffect(isDragActive ? 1.2 : 1.0)
             .onTapGesture(perform: playerVM.togglePlayback)
     }
-
+    
     private var maximizeButton: some View {
         Image(systemName: "arrow.up")
             .font(.caption)
@@ -64,11 +72,11 @@ struct MinimizedView<Item: MediaItem>: View {
             .offset(x: maximizeOffset.x, y: maximizeOffset.y)
             .onTapGesture(perform: handleMaximize)
     }
-
+    
     // MARK: - Gestures
-
+    
     private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 0)
+        DragGesture(minimumDistance: 10)
             .onChanged { value in
                 if !isDragActive {
                     isDragActive = true
@@ -77,42 +85,58 @@ struct MinimizedView<Item: MediaItem>: View {
                 dragOffset = value.translation
             }
             .onEnded { value in
-                let threshold = config.fab.dragThreshold
-                let exceeds = abs(value.translation.width) > threshold || abs(value.translation.height) > threshold
-
-                if exceeds {
-                    let newPosition = CGPoint(
+                let dragDistance = sqrt(
+                    pow(value.translation.width, 2) +
+                    pow(value.translation.height, 2)
+                )
+                
+                let snapThreshold: CGFloat = 40
+                
+                if dragDistance > snapThreshold {
+                    let finalPosition = CGPoint(
                         x: floatingVM.position.x + value.translation.width,
                         y: floatingVM.position.y + value.translation.height
                     )
-                    floatingVM.updatePosition(newPosition)
-                    dragOffset = .zero
-
+                    
+                    // ✅ Pass both current and final positions
+                    let targetCorner = GeometryHelper.detectCornerByDirection(
+                        currentPosition: floatingVM.position,  // ✅ NEW
+                        finalPosition: finalPosition,
+                        screenSize: geometry.size,
+                        safeArea: geometry.safeAreaInsets,
+                        config: config
+                    )
+                    
+                    let targetPosition = GeometryHelper.position(
+                        for: targetCorner,
+                        screenSize: geometry.size,
+                        safeArea: geometry.safeAreaInsets,
+                        config: config
+                    )
+                    
                     withAnimation(.spring(response: config.animation.snapResponse, dampingFraction: config.animation.snapDamping)) {
-                        floatingVM.snapToCorner(screenSize: geometry.size, safeArea: geometry.safeAreaInsets)
-                        
-                        detectCorner()
+                        dragOffset = .zero
+                        floatingVM.updatePosition(targetPosition)
+                        isDragActive = false
+                        floatingVM.isDragging = false
                     }
                     
+                } else {
+                    withAnimation(.spring(response: config.animation.snapResponse, dampingFraction: config.animation.snapDamping)) {
+                        dragOffset = .zero
+                        isDragActive = false
+                        floatingVM.isDragging = false
+                    }
                 }
                 
-                withAnimation {
-                       isDragActive = false
-                       floatingVM.isDragging = false
-                   }
-
-//                Task {
-//                    try? await Task.sleep(for: .seconds(0.2))
-//                    withAnimation {
-//                           isDragActive = false
-//                           floatingVM.isDragging = false
-//                       }
-//                }
+               
             }
     }
-
+    
+    
+    
     // MARK: - Actions
-
+    
     private func handleMaximize() {
         guard !floatingVM.isDragging else { return }
         withAnimation(.spring(response: config.animation.springResponse, dampingFraction: config.animation.springDamping)) {
@@ -121,7 +145,7 @@ struct MinimizedView<Item: MediaItem>: View {
         
         
     }
-
+    
     private func detectCorner() {
         currentCorner = GeometryHelper.detectCorner(
             position: floatingVM.position,
@@ -139,6 +163,6 @@ struct MinimizedView<Item: MediaItem>: View {
         service: DefaultMediaPlayerService(initialItem: Song.sample)
     )
     @Previewable @State var floatingVM = FloatingPlayerViewModel(config: .default)
-
+    
     return FloatingPlayerView(playerVM: playerVM, floatingVM: floatingVM)
 }
